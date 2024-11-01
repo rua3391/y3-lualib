@@ -105,7 +105,7 @@ function M:core_subscribe(event_name, ...)
 
     local gcHost = self --[[@as GCHost]]
     if gcHost.bindGC then
-        gcHost:bindGC(trigger)
+        gcHost:bindGC(New 'GCBuffer' (0, trigger))
     end
     return trigger
 end
