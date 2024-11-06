@@ -84,7 +84,7 @@ y3.py_event_sub.new_global_trigger('ET_LOSS_MODIFIER', function (data)
         return
     end
     if buff.object_event_manager then
-        buff.object_event_manager:raw_notify("效果-失去", nil, y3.py_event_sub.convert_py_params_lazy("ET_LOSS_MODIFIER", data))
+        buff.object_event_manager:raw_notify("效果-失去", nil, y3.py_event_sub.convert_py_params("ET_LOSS_MODIFIER", data))
     end
     Delete(buff)
 end)
