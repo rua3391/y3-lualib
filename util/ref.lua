@@ -36,9 +36,11 @@ function M:__init(className, new)
     -- 强引用
     ---@private
     self.strongRefMap = {}
+    ---@private
+    self.strongSize = 0
     -- 弱引用
     ---@private
-    -- self.weakRefMap = setmetatable({}, y3.util.MODE_V)
+    self.weakRefMap = setmetatable({}, y3.util.MODE_V)
     -- 待删除列表（青年代）
     ---@private
     self.waitingListYoung = {}
@@ -66,6 +68,8 @@ function M:get(key, ...)
     end
     obj = self.newMethod(key, ...)
     self.strongRefMap[key] = obj
+    self.weakRefMap[key] = nil
+    self.strongSize = self.strongSize + 1
     return obj
 end
 
@@ -76,6 +80,12 @@ function M:fetch(key)
     local strongRefMap = self.strongRefMap
     if strongRefMap[key] then
         return strongRefMap[key]
+    end
+    if self.allowWeakRef then
+        local weakRefMap = self.weakRefMap
+        if weakRefMap[key] then
+            return weakRefMap[key]
+        end
     end
     return nil
 end
@@ -103,8 +113,9 @@ end
 function M:removeNow(key)
     if self.strongRefMap[key] then
         self.strongRefMap[key] = nil
+        self.strongSize = self.strongSize - 1
     end
-    -- self.weakRefMap[key] = nil
+    self.weakRefMap[key] = nil
     self.waitingListYoung[key] = nil
     self.waitingListOld[key] = nil
 end
@@ -114,12 +125,15 @@ function M:updateWaitingList()
     local young     = self.waitingListYoung
     local old       = self.waitingListOld
     local strongRef = self.strongRefMap
+    local weakRef   = self.weakRefMap
 
     -- 遍历老年代，将老年代的对象改为弱引用
     for key in pairs(old) do
         local obj = strongRef[key]
         if obj then
             strongRef[key] = nil
+            weakRef[key] = obj
+            self.strongSize = self.strongSize - 1
         end
         old[key] = nil
     end
